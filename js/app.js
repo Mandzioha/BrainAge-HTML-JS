@@ -1,70 +1,66 @@
-const screen = document.querySelector(".quest");
-const btn = document.querySelector("button");
-const input = document.querySelector("input");
-const text = document.querySelector(".text");
 const wrap = document.querySelector('.wrap');
 
-let temp, item, i;
+const mathProblems = [
+  { expression: "2 + 3", answer: 5 },
+  { expression: "5 - 1", answer: 4 },
+  { expression: "4 * 6", answer: 24 },
+  { expression: "8 / 2", answer: 4 },
+  { expression: "10 + 7", answer: 17 },
+  { expression: "15 - 9", answer: 6 },
+  { expression: "3 * 5", answer: 15 },
+  { expression: "12 / 4", answer: 3 },
+  { expression: "9 + 6", answer: 15 },
+  { expression: "18 - 7", answer: 11 },
+];
 
-class Question {
-  constructor(input, display, text) {
-    this.input = input;
-    this.display = display;
-    this.text = text;
-    this.math = [
-      { expression: "2 + 3", answer: 5 },
-      { expression: "5 - 1", answer: 4 },
-      { expression: "4 * 6", answer: 24 },
-      { expression: "8 / 2", answer: 4 },
-      { expression: "10 + 7", answer: 17 },
-      { expression: "15 - 9", answer: 6 },
-      { expression: "3 * 5", answer: 15 },
-      { expression: "12 / 4", answer: 3 },
-      { expression: "9 + 6", answer: 15 },
-      { expression: "18 - 7", answer: 11 },
-    ];
+class Quiz {
+  constructor() {
+    this.usedIndexes = [];
+    this.epsilon = 1e-6;
+    this.template = document.querySelector('#template');
+    this.initializeQuiz();
   }
 
-  getRandomMath() {
-    const random = Math.floor(Math.random() * this.math.length);
-    return this.math[random];
+  getRandomUniqueIndex(arr) {
+    let index;
+    do {
+      index = Math.floor(Math.random() * arr.length);
+    } while (this.usedIndexes.includes(index));
+    this.usedIndexes.push(index);
+    return index;
   }
 
   setRandomMath() {
-    this.currentMath = this.getRandomMath();
+    const index = this.getRandomUniqueIndex(mathProblems);
+    this.currentMath = mathProblems[index];
     this.text.textContent = `Oblicz: ${this.currentMath.expression}`;
   }
 
   showAnswer() {
     const userInput = parseFloat(this.input.value);
-    const epsilon = 1e-6; 
 
     if (!isNaN(userInput)) {
-      console.log(userInput, this.currentMath);
-      (Math.abs(userInput - this.currentMath.answer) < epsilon)
-        ? (this.display.textContent = "Poprawna odpowiedź!")
-        : (this.display.textContent = "Błędna odpowiedź. Spróbuj ponownie.");
+      const isCorrect = Math.abs(userInput - this.currentMath.answer) < this.epsilon;
+      this.display.textContent = isCorrect ? "Poprawna odpowiedź!" : "Błędna odpowiedź.";
     } else {
-      this.display.textContent =
-        "Wystąpił błąd w obliczeniach. Spróbuj ponownie.";
+      this.display.textContent = "Wystąpił błąd w obliczeniach. Spróbuj ponownie.";
     }
+  }
+
+  initializeQuiz() {
+    const clone = this.template.content.cloneNode(true);
+    const btn = clone.querySelector("button");
+
+    this.input = clone.querySelector("input");
+    this.display = clone.querySelector(".quest");
+    this.text = clone.querySelector(".text");
+
+    wrap.appendChild(clone);
+
+    onload = () => this.setRandomMath();
+
+    btn.addEventListener("click", () => this.showAnswer());
   }
 }
 
-function initializeQuiz() {
-    console.log('work');
-    const template = document.querySelector('#template');
-    const clone = template.content.cloneNode(true);
-    wrap.appendChild(clone);
-  
-    const Question1 = new Question(input, screen, text);
-    onload = () => Question1.setRandomMath();
-  
-    const addOnClick = () => {
-      Question1.showAnswer();
-    };
-  
-    btn.addEventListener("click", addOnClick);
-  }
-
-initializeQuiz();
+const question1 = new Quiz();
