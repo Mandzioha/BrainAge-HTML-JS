@@ -13,26 +13,18 @@ const mathProblems = [
   { expression: "18 - 7", answer: 11 },
 ];
 
+const usedIndexes = [];
+
 class Quiz {
-  constructor() {
-    this.usedIndexes = [];
+  constructor(index) {
+    this.mathIndex = index;
     this.epsilon = 1e-6;
     this.template = document.querySelector('#template');
     this.initializeQuiz();
   }
 
-  getRandomUniqueIndex(arr) {
-    let index;
-    do {
-      index = Math.floor(Math.random() * arr.length);
-    } while (this.usedIndexes.includes(index));
-    this.usedIndexes.push(index);
-    return index;
-  }
-
   setRandomMath() {
-    const index = this.getRandomUniqueIndex(mathProblems);
-    this.currentMath = mathProblems[index];
+    this.currentMath = mathProblems[this.mathIndex];
     this.text.textContent = `Oblicz: ${this.currentMath.expression}`;
   }
 
@@ -40,12 +32,14 @@ class Quiz {
     const userInput = parseFloat(this.input.value);
 
     if (!isNaN(userInput)) {
-      const isCorrect = Math.abs(userInput - this.currentMath.answer) < this.epsilon;
-      this.display.textContent = isCorrect ? "Poprawna odpowiedź!" : "Błędna odpowiedź.";
+        const isCorrect = Math.abs(userInput - this.currentMath.answer) < this.epsilon;
+        this.display.textContent = isCorrect ? "Poprawna odpowiedź!" : "Błędna odpowiedź.";
+        this.input.setAttribute("disabled", "");
     } else {
-      this.display.textContent = "Wystąpił błąd w obliczeniach. Spróbuj ponownie.";
+        this.display.textContent = "Wystąpił błąd w obliczeniach. Spróbuj ponownie.";
     }
-  }
+}
+
 
   initializeQuiz() {
     const clone = this.template.content.cloneNode(true);
@@ -63,4 +57,13 @@ class Quiz {
   }
 }
 
-const question1 = new Quiz();
+const getRandomUniqueIndex = arr => {
+  let index;
+  do {
+    index = Math.floor(Math.random() * arr.length);
+  } while (usedIndexes.includes(index));
+  usedIndexes.push(index);
+  return index;
+}
+
+const question1 = new Quiz(getRandomUniqueIndex(mathProblems));
