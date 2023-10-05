@@ -15,6 +15,9 @@ const mathProblems = [
 
 const usedIndexes = [];
 
+let elementIndex = 0;
+let numOfElements;
+
 class Quiz {
   constructor(index) {
     this.mathIndex = index;
@@ -69,7 +72,7 @@ class Quiz {
     let result;
     try {
       result = eval(expression);
-      console.log(result);
+      // console.log(result);
     } catch (error) {
       console.error("Error while evaluating expression:", error);
       throw new Error("Error evaluating expression");
@@ -81,7 +84,7 @@ class Quiz {
     });
 
     this.currentMath = mathProblems.at(-1);
-    console.log(this.currentMath);
+    // console.log(this.currentMath);
     this.text.textContent = `Oblicz: ${this.currentMath.expression}`;
   }
 
@@ -102,22 +105,21 @@ class Quiz {
     }
   }
 
-  initializeQuiz(callback) {
+  initializeQuiz() {
     const clone = this.template.content.cloneNode(true);
     const btn = clone.querySelector("button");
 
     this.input = clone.querySelector("input");
     this.display = clone.querySelector(".quest");
     this.text = clone.querySelector(".text");
-
+    
     wrap.appendChild(clone);
     this.setRandomMath();
 
     btn.addEventListener("click", () => {
       this.showAnswer();
-      if (callback) {
-        callback();
-      }
+      elementIndex++;
+      addStylesToElement(document.querySelectorAll('.input'), elementIndex);
     });
   }
 
@@ -131,13 +133,23 @@ class Quiz {
 }
 
 const activateQuiz = () => {
+  numOfElements = 10;
   const createNextQuiz = () => {
-    for (let currentIndex = 0; currentIndex < 10; currentIndex++) {
+    for (let currentIndex = 0; currentIndex < numOfElements; currentIndex++) {
       new Quiz(currentIndex, createNextQuiz);
+      (currentIndex + 1 === numOfElements) && addStylesToElement(document.querySelectorAll('.input'), 0);
     }
   };
-
   createNextQuiz();
 };
 
+const addStylesToElement = (elements, i) => {
+  console.log(i);
+  if (!(elements instanceof NodeList)) {
+    throw new Error("Error, element is'nt a NodeList");
+  } else {
+    elements.forEach(element => element.style.display = 'none');
+    elements[i].style.display = "block";
+  }
+};
 onload = activateQuiz;
