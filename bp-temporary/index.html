@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game</title>
+</head>
+<style>
+    #board {
+        border: 1px solid black;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 400px;
+    }
+
+    .card {
+        margin: 10px;
+        display: flex;
+        width: 100px;
+        height: 150px;
+        background-color: rgb(128, 128, 128);
+        color: white;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid black;
+        border-radius: 10px;
+        color: black !important;
+        font-size: 25px;
+    }
+
+    .red {
+        color: red;
+    }
+
+    .white {
+        color: white;
+    }
+</style>
+
+<body>
+    <div id="board"></div>
+</body>
+<script>
+    function createDeck() {
+        const symbols = ["A", "B", "C", "D", "E", "F", "G", "H"];
+        const deck = [];
+
+        // Create a deck with unique pairs of symbols for both red and white decks
+        for (let i = 0; i < symbols.length; i++) {
+            deck.push({ symbol: symbols[i], color: "red" });
+            deck.push({ symbol: symbols[i], color: "white" });
+        }
+
+        // Shuffle the deck
+        shuffleArray(deck);
+
+        return deck;
+    }
+
+    // Fisher-Yates shuffle algorithm
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // Game initialization
+    function initializeGame() {
+        const deck = createDeck();
+        const board = document.getElementById("board");
+        board.innerHTML = ""; // Clear the board
+
+        let revealed = new Array(deck.length).fill(false); // Array to track revealed cards
+        let selected = []; // Array to store two selected cards
+
+        // Create cards on the board
+        for (let i = 0; i < deck.length; i++) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.dataset.index = i;
+            card.textContent = "?"; // Hide the symbol
+            card.style.backgroundColor = deck[i].color; // Set card color
+
+            card.addEventListener("click", function () {
+                if (!revealed[i] && selected.length < 2) {
+                    card.textContent = deck[i].symbol; // Reveal the card
+                    revealed[i] = true;
+                    selected.push({ index: i, symbol: deck[i].symbol });
+
+                    if (selected.length === 2) {
+                        // Check if the two selected cards are the same
+                        if (selected[0].symbol === selected[1].symbol) {
+                            // If so, clear them
+                            setTimeout(() => {
+                                const index1 = selected[0].index;
+                                const index2 = selected[1].index;
+                                board.children[index1].style.visibility = "hidden";
+                                board.children[index2].style.visibility = "hidden";
+                                revealed[index1] = true;
+                                revealed[index2] = true;
+                                selected = [];
+                            }, 500);
+                        } else {
+                            // If not, flip the cards back
+                            setTimeout(() => {
+                                board.children[selected[0].index].textContent = "?";
+                                board.children[selected[1].index].textContent = "?";
+                                revealed[selected[0].index] = false;
+                                revealed[selected[1].index] = false;
+                                selected = [];
+                            }, 500);
+                        }
+                    }
+                }
+            });
+
+            board.appendChild(card);
+        }
+    }
+
+    // Initialize the game on page load
+    window.addEventListener("DOMContentLoaded", initializeGame);
+
+</script>
+
+</html>
