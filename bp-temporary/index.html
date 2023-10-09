@@ -5,37 +5,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&family=Pixelify+Sans&display=swap" rel="stylesheet">
 </head>
 <style>
     #board {
         border: 1px solid black;
-        margin: 0 auto;
         display: flex;
+        margin: auto;
+        justify-content: space-evenly;
         flex-wrap: wrap;
-        max-width: 400px;
+        max-width: 50%;
     }
 
     .card {
         margin: 10px;
         display: flex;
-        width: 100px;
-        height: 150px;
-        background-color: rgb(128, 128, 128);
-        color: white;
+        width: 125px;
+        height: 175px;
+        background-color: white;
+        color: black;
         justify-content: center;
         align-items: center;
-        border: 1px solid black;
+        border: 3px solid rgb(139, 154, 168);
         border-radius: 10px;
-        color: black !important;
-        font-size: 25px;
+        font-size: 35px;
+        font-family: 'Montserrat', sans-serif;
+        user-select: none;
     }
 
     .red {
-        color: red;
+        color: red !important;
     }
 
-    .white {
-        color: white;
+    .black {
+        color: black;
     }
 </style>
 
@@ -50,7 +55,7 @@
         // Create a deck with unique pairs of symbols for both red and white decks
         for (let i = 0; i < symbols.length; i++) {
             deck.push({ symbol: symbols[i], color: "red" });
-            deck.push({ symbol: symbols[i], color: "white" });
+            deck.push({ symbol: symbols[i], color: "black" });
         }
 
         // Shuffle the deck
@@ -81,8 +86,8 @@
             const card = document.createElement("div");
             card.className = "card";
             card.dataset.index = i;
-            card.textContent = "?"; // Hide the symbol
-            card.style.backgroundColor = deck[i].color; // Set card color
+            card.textContent = ""; // Hide the symbol
+            card.style.color = deck[i].color; // Set card color
 
             card.addEventListener("click", function () {
                 if (!revealed[i] && selected.length < 2) {
@@ -106,8 +111,8 @@
                         } else {
                             // If not, flip the cards back
                             setTimeout(() => {
-                                board.children[selected[0].index].textContent = "?";
-                                board.children[selected[1].index].textContent = "?";
+                                board.children[selected[0].index].textContent = "";
+                                board.children[selected[1].index].textContent = "";
                                 revealed[selected[0].index] = false;
                                 revealed[selected[1].index] = false;
                                 selected = [];
