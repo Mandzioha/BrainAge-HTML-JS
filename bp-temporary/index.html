@@ -10,8 +10,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat&family=Pixelify+Sans&display=swap" rel="stylesheet">
 </head>
 <style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: 'Montserrat', sans-serif;
+        margin: 0;
+    }
+
     #board {
-        border: 1px solid black;
+        /* border: 1px solid black; */
         display: flex;
         margin: auto;
         justify-content: space-evenly;
@@ -31,8 +40,19 @@
         border: 3px solid rgb(139, 154, 168);
         border-radius: 10px;
         font-size: 35px;
-        font-family: 'Montserrat', sans-serif;
         user-select: none;
+    }
+
+    .win-alert {
+        text-align: center;
+        width: 300px;
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgb(255, 255, 255);
+        border: 1px solid rgb(209, 209, 209);
+        border-radius: 3px;
     }
 
     .red {
@@ -46,25 +66,28 @@
 
 <body>
     <div id="board"></div>
+    <!--  -->
 </body>
 <script>
+    let startTime;
+    let timerInterval;
+    let missedAttempts = 0;
+    let canClick = true;
+
     function createDeck() {
         const symbols = ["A", "B", "C", "D", "E", "F", "G", "H"];
         const deck = [];
 
-        // Create a deck with unique pairs of symbols for both red and white decks
         for (let i = 0; i < symbols.length; i++) {
             deck.push({ symbol: symbols[i], color: "red" });
             deck.push({ symbol: symbols[i], color: "black" });
         }
 
-        // Shuffle the deck
         shuffleArray(deck);
 
         return deck;
     }
 
-    // Fisher-Yates shuffle algorithm
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -72,63 +95,122 @@
         }
     }
 
-    // Game initialization
     function initializeGame() {
+        startTime = null;
+        clearInterval(timerInterval);
+        missedAttempts = 0;
+        canClick = true;
+
         const deck = createDeck();
         const board = document.getElementById("board");
-        board.innerHTML = ""; // Clear the board
+        board.innerHTML = "";
+        let revealedCards = new Array(deck.length).fill(false);
+        let selectedCards = [];
+        let pairsMatched = 0;
 
-        let revealed = new Array(deck.length).fill(false); // Array to track revealed cards
-        let selected = []; // Array to store two selected cards
-
-        // Create cards on the board
         for (let i = 0; i < deck.length; i++) {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.dataset.index = i;
-            card.textContent = ""; // Hide the symbol
-            card.style.color = deck[i].color; // Set card color
-
+            const card = createCard(deck[i].color, deck[i].symbol, i);
             card.addEventListener("click", function () {
-                if (!revealed[i] && selected.length < 2) {
-                    card.textContent = deck[i].symbol; // Reveal the card
-                    revealed[i] = true;
-                    selected.push({ index: i, symbol: deck[i].symbol });
-
-                    if (selected.length === 2) {
-                        // Check if the two selected cards are the same
-                        if (selected[0].symbol === selected[1].symbol) {
-                            // If so, clear them
-                            setTimeout(() => {
-                                const index1 = selected[0].index;
-                                const index2 = selected[1].index;
-                                board.children[index1].style.visibility = "hidden";
-                                board.children[index2].style.visibility = "hidden";
-                                revealed[index1] = true;
-                                revealed[index2] = true;
-                                selected = [];
-                            }, 500);
+                if (!revealedCards[i] && selectedCards.length < 2 && canClick) {
+                    if (!startTime) {
+                        startTime = new Date().getTime();
+                        updateTimer();
+                    }
+                    revealCard(card, deck[i].symbol, i);
+                    revealedCards[i] = true;
+                    selectedCards.push({ index: i, symbol: deck[i].symbol });
+                    if (selectedCards.length === 2) {
+                        canClick = false;
+                        if (selectedCards[0].symbol === selectedCards[1].symbol) {
+                            clearCards(board, selectedCards[0].index, selectedCards[1].index, revealedCards);
+                            selectedCards = [];
+                            pairsMatched++;
+                            if (pairsMatched === deck.length / 2) {
+                                clearInterval(timerInterval);
+                                setTimeout(function () {
+                                    PlayerWon();
+                                }, 500);
+                            }
                         } else {
-                            // If not, flip the cards back
-                            setTimeout(() => {
-                                board.children[selected[0].index].textContent = "";
-                                board.children[selected[1].index].textContent = "";
-                                revealed[selected[0].index] = false;
-                                revealed[selected[1].index] = false;
-                                selected = [];
-                            }, 500);
+                            if (selectedCards.length === 2 && !revealedCards[selectedCards[0].index] && !revealedCards[selectedCards[1].index]) {
+                                missedAttempts++;
+                                console.log("test");
+                            }
+                            flipCards(board, selectedCards[0].index, selectedCards[1].index, revealedCards);
+                            selectedCards = [];
                         }
+                        setTimeout(function () {
+                            canClick = true;
+                        }, 500);
                     }
                 }
             });
-
             board.appendChild(card);
         }
     }
 
-    // Initialize the game on page load
+    function PlayerWon() {
+        const endTime = new Date().getTime();
+        const gameTime = (endTime - startTime) / 1000;
+
+        const winAlert = document.createElement("div");
+        winAlert.classList.add('win-alert');
+        winAlert.innerHTML = `<h1>You Won!</h1><p>Time: ${gameTime.toFixed(2)} seconds</p>
+        <!--<p>Missed Attempts: ${missedAttempts}</p>-->
+        <br><input type='button' id='playAgainbtn' value='Play Again'>`;
+        document.body.appendChild(winAlert);
+
+        if (document.getElementById('playAgainbtn')) {
+            document.getElementById('playAgainbtn').addEventListener('click', function () {
+                winAlert.remove();
+                initializeGame();
+            });
+        }
+    }
+
+    function updateTimer() {
+        const timerElement = document.createElement("div");
+        timerElement.id = "timer";
+        document.body.appendChild(timerElement);
+
+        timerInterval = setInterval(function () {
+            const currentTime = new Date().getTime();
+            const elapsedTime = (currentTime - startTime) / 1000;
+        }, 10);
+    }
+
+    function createCard(color, symbol, index) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.index = index;
+        card.textContent = "";
+        card.style.color = color;
+        return card;
+    }
+
+    function revealCard(card, symbol, index) {
+        card.textContent = symbol;
+    }
+
+    function clearCards(board, index1, index2, revealedCards) {
+        setTimeout(() => {
+            board.children[index1].style.visibility = "hidden";
+            board.children[index2].style.visibility = "hidden";
+            revealedCards[index1] = true;
+            revealedCards[index2] = true;
+        }, 500);
+    }
+
+    function flipCards(board, index1, index2, revealedCards) {
+        setTimeout(() => {
+            board.children[index1].textContent = "";
+            board.children[index2].textContent = "";
+            revealedCards[index1] = false;
+            revealedCards[index2] = false;
+        }, 500);
+    }
+
     window.addEventListener("DOMContentLoaded", initializeGame);
 
 </script>
-
 </html>
