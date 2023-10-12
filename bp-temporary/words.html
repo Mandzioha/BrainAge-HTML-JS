@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="game-container">
+        <div id="word-container">
+            <span id="word-to-guess"></span><br>
+            <input type="text" id="guess-input" />
+            <button id="start-game">Start</button>
+        </div>
+    </div>
+</body>
+<style>
+    #game-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 500px;
+    }
+
+    #word-to-guess {
+        font-size: 40px;
+        margin-bottom: 10px;
+    }
+</style>
+<script>
+    // spell-game.js
+    // spell-game.js
+
+async function loadWordsFromFile() {
+    try {
+        const response = await fetch('words.json'); // Wczytaj plik JSON
+        const words = await response.json(); // Parsuj dane JSON
+
+        return words;
+    } catch (error) {
+        console.error('Błąd podczas wczytywania słów z pliku JSON:', error);
+        return [];
+    }
+}
+
+let words = [];
+
+// Rozpocznij grę po załadowaniu słów
+loadWordsFromFile().then((loadedWords) => {
+    words = loadedWords;
+    const usedWords = [];
+
+    function getRandomWord() {
+        if (words.length === 0) {
+            console.log('Wykorzystano wszystkie dostępne słowa.');
+            return null;
+        }
+
+        const randomIndex = Math.floor(Math.random() * words.length);
+        const word = words[randomIndex];
+
+        usedWords.push(word);
+        words.splice(randomIndex, 1);
+
+        return word;
+    }
+
+    function displayWordForOneSecond(word) {
+        const wordToGuessElement = document.getElementById('word-to-guess');
+        wordToGuessElement.textContent = word;
+
+        setTimeout(() => {
+            wordToGuessElement.textContent = '';
+            startSpellingGame(word);
+        }, 250);
+    }
+
+    function startSpellingGame(word) {
+        const wordArray = word.split('');
+        let currentLetterIndex = 0;
+        const guessInput = document.getElementById('guess-input');
+
+        function displayNextLetter() {
+            if (currentLetterIndex < wordArray.length) {
+                const letterToGuess = wordArray[currentLetterIndex];
+                const partialWord = wordArray.slice(0, currentLetterIndex).join('');
+                guessInput.value = '';
+
+                // Odbieranie odpowiedzi od gracza
+                guessInput.addEventListener('input', function checkGuess() {
+                    if (guessInput.value === letterToGuess) {
+                        currentLetterIndex++;
+                        guessInput.value = ''; // Wyczyść pole input
+                        guessInput.removeEventListener('input', checkGuess);
+
+                        // Aktualizacja wyświetlanego fragmentu słowa
+                        const wordToGuessElement = document.getElementById('word-to-guess');
+                        wordToGuessElement.textContent = `${partialWord}${"_".repeat(wordArray.length - partialWord.length)}`;
+
+                        displayNextLetter(); // Wywołaj kolejną literę
+                    }
+                });
+
+                // Aktualizacja wyświetlanego fragmentu słowa
+                const wordToGuessElement = document.getElementById('word-to-guess');
+                wordToGuessElement.textContent = `${partialWord}${"_".repeat(wordArray.length - partialWord.length)}`;
+            } else {
+                // Wyświetlenie komunikatu po ukończeniu słowa
+                const wordToGuessElement = document.getElementById('word-to-guess');
+                wordToGuessElement.textContent = `${word}`;
+                setTimeout(() => {
+                    wordToGuessElement.textContent = '';
+                    displayWordForOneSecond(getRandomWord());
+                }, 250);
+            }
+        }
+
+        displayNextLetter();
+    }
+
+    // Rozpocznij grę po kliknięciu przycisku "Start"
+    const startButton = document.getElementById('start-game');
+    startButton.addEventListener('click', () => {
+        const wordToGuess = getRandomWord();
+        if (wordToGuess) {
+            displayWordForOneSecond(wordToGuess);
+        }
+    });
+});
+
+
+</script>
+
+</html>
