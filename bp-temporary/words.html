@@ -121,10 +121,11 @@ loadWordsFromFile().then((loadedWords) => {
 
         displayNextLetter();
     }
-
+    
     // Rozpocznij grę po kliknięciu przycisku "Start"
     const startButton = document.getElementById('start-game');
     startButton.addEventListener('click', () => {
+        startButton.disabled = true;
         const wordToGuess = getRandomWord();
         if (wordToGuess) {
             displayWordForOneSecond(wordToGuess);
